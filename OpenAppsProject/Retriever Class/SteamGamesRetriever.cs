@@ -12,8 +12,10 @@ namespace OpenAppsProject.Retriever_Class
         public SteamGamesRetriever()
         {
             Games = new List<(string GameName, string ExePath)>();
-            RetrieveGames();
         }
+
+   
+
 
         private void RetrieveGames()
         {
@@ -133,6 +135,10 @@ namespace OpenAppsProject.Retriever_Class
             return preferredExeFile;
         }
         public void run()
+        {
+            RetrieveGames();
+        }
+        public void showLib()
         {
             Console.WriteLine("Running SteamGamesRetriever...");
             foreach (var game in Games)

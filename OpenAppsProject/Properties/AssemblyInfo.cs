@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OpenAppsProject")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("VoxCommand")]
+[assembly: AssemblyDescription("Project focuses on speech recognition to execute commands and launch games.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("OpenAppsProject")]
+[assembly: AssemblyProduct("VoxCommand")]
 [assembly: AssemblyCopyright("Copyright ©  2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
