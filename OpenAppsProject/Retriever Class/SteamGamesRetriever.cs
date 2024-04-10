@@ -56,18 +56,26 @@ namespace OpenAppsProject.Retriever_Class
                     foreach (var gameDir in gameDirectories)
                     {
                         Console.WriteLine($"Checking game directory: {gameDir}");
-                        var exeFiles = Directory.GetFiles(gameDir, "*.exe", SearchOption.TopDirectoryOnly)
-                                                .Where(file => !file.Contains("Crash") && !file.Contains("Handler"));
 
-                        if (exeFiles.Any())
+                        // First, check for executables only in the top directory
+                        var exeFilesTopDirectory = Directory.GetFiles(gameDir, "*.exe", SearchOption.TopDirectoryOnly);
+                        var gameExe = FindGameExecutable(exeFilesTopDirectory);
+
+                        // If no executable found, search in all subdirectories
+                        if (gameExe == null)
                         {
-                            var exePath = exeFiles.First();
-                            Console.WriteLine($"Found game executable: {exePath}");
-                            Games.Add((Path.GetFileName(gameDir), exePath));
+                            var exeFilesAllDirectories = Directory.GetFiles(gameDir, "*.exe", SearchOption.AllDirectories);
+                            gameExe = FindGameExecutable(exeFilesAllDirectories);
+                        }
+
+                        if (gameExe != null)
+                        {
+                            Console.WriteLine($"Found game executable: {gameExe}");
+                            Games.Add((Path.GetFileName(gameDir), gameExe));
                         }
                         else
                         {
-                            Console.WriteLine($"No valid executable found in: {gameDir}");
+                            Console.WriteLine($"No executable found in: {gameDir}");
                         }
                     }
                 }
@@ -78,6 +86,52 @@ namespace OpenAppsProject.Retriever_Class
             }
         }
 
+        private string FindGameExecutable(string[] exeFiles)
+        {
+            string preferredExeFile = null;
+
+            // Filter out unwanted executables
+            List<string> filteredExeFiles = new List<string>();
+            foreach (var file in exeFiles)
+            {
+                string fileName = Path.GetFileName(file);
+                if (!fileName.Contains("Unity") &&
+                    !fileName.Contains("Crash") &&
+                    !fileName.Contains("UnityCrashHandler") &&
+                    !fileName.Contains("UnityCrashHandler64") &&
+                    !fileName.Contains("Handler"))
+                {
+                    filteredExeFiles.Add(file);
+                }
+            }
+
+            // Prioritize .exe files starting with 'start'
+            foreach (var file in filteredExeFiles)
+            {
+                if (Path.GetFileName(file).StartsWith("start", StringComparison.OrdinalIgnoreCase))
+                {
+                    preferredExeFile = file;
+                    break;
+                }
+            }
+
+            // If no preferred .exe is found, use the largest .exe file
+            if (preferredExeFile == null)
+            {
+                long largestSize = 0;
+                foreach (var file in filteredExeFiles)
+                {
+                    long size = new FileInfo(file).Length;
+                    if (size > largestSize)
+                    {
+                        largestSize = size;
+                        preferredExeFile = file;
+                    }
+                }
+            }
+
+            return preferredExeFile;
+        }
         public void run()
         {
             Console.WriteLine("Running SteamGamesRetriever...");

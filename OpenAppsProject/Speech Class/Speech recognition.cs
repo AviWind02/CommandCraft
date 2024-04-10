@@ -69,7 +69,7 @@ namespace OpenAppsProject.Speech_Class
                 if (command.StartsWith("show me") || command.StartsWith("list") || command.StartsWith("show"))
                 {
 
-                    if (command.Contains("steam games") || command.Contains(" steam library"))
+                    if (command.Contains("steam games") || command.Contains("steam library"))
                     {
                         Console.WriteLine("Steam command detected. Retrieving Steam games...");
                         new SteamGamesRetriever().run();
