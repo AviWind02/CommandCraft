@@ -1,155 +1,119 @@
 ﻿using System;
-using System.Speech.Recognition;
-using System.Speech.Synthesis;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Microsoft.CognitiveServices.Speech;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace OpenAppsProject
 {
     internal class Program
     {
-        private static SpeechSynthesizer synthesizer;
+        private static System.Speech.Synthesis.SpeechSynthesizer synthesizer;
+        private static Dictionary<string, string> appCommands;
+        private static Microsoft.CognitiveServices.Speech.SpeechRecognizer msRecognizer;
+        private static System.Speech.Recognition.SpeechRecognitionEngine recognizer;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            try
-            {
-                synthesizer = new SpeechSynthesizer();
-                SpeechRecognitionEngine recognizer = new SpeechRecognitionEngine();
+            Console.WriteLine("Initializing synthesizer...");
+            synthesizer = new System.Speech.Synthesis.SpeechSynthesizer();
 
+            Console.WriteLine("Initializing application commands...");
+            InitializeAppCommands();
 
-                string wakeWord = "Jarvis";
-                Choices commands = new Choices();
-                commands.Add(new string[] { "open notepad", "open calculator", "search" });
+            Console.WriteLine("Setting up System.Speech recognition...");
+            recognizer = new System.Speech.Recognition.SpeechRecognitionEngine();
+            recognizer.SetInputToDefaultAudioDevice();
 
+            var grammar = new System.Speech.Recognition.Grammar(new System.Speech.Recognition.GrammarBuilder(new System.Speech.Recognition.Choices(appCommands.Keys.ToArray())));
+            recognizer.LoadGrammar(grammar);
 
+            recognizer.SpeechRecognized += Recognizer_SpeechRecognized;
+            recognizer.RecognizeAsync(System.Speech.Recognition.RecognizeMode.Multiple);
 
-                GrammarBuilder gb = new GrammarBuilder();
-                gb.Append(wakeWord);
-                gb.Append(commands);
+            Console.WriteLine("Setting up Cognitive Services speech recognition...");
+            var config = SpeechConfig.FromSubscription("01eeed71b753442098af2ed03a8f2cef", "eastus");
+            msRecognizer = new Microsoft.CognitiveServices.Speech.SpeechRecognizer(config);
+            msRecognizer.Recognized += MsRecognizer_Recognized;
 
-                gb.AppendDictation();
-
-                Grammar g = new Grammar(gb);
-
-                recognizer.LoadGrammar(g);
-                recognizer.SpeechRecognized += Recognizer_SpeechRecognized;
-                recognizer.SpeechDetected += Recognizer_SpeechDetected;
-                recognizer.SpeechRecognitionRejected += Recognizer_SpeechRecognitionRejected;
-                recognizer.RecognizeCompleted += Recognizer_RecognizeCompleted;
-
-                recognizer.SetInputToDefaultAudioDevice();
-                recognizer.RecognizeAsync(RecognizeMode.Multiple);
-
-                Console.WriteLine("Listening for commands...");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error initializing speech recognition: " + ex.Message);
-            }
+            await msRecognizer.StartContinuousRecognitionAsync().ConfigureAwait(false);
+            Console.WriteLine("Speech recognition services are running...");
 
             Console.ReadLine();
-        }
-    
-        static void Recognizer_SpeechDetected(object sender, SpeechDetectedEventArgs e)
-        {
-            Console.WriteLine($"Speech detected at AudioPosition: {e.AudioPosition}");
-        }
-        static void Recognizer_SpeechRecognitionRejected(object sender, SpeechRecognitionRejectedEventArgs e)
-        {
-            Console.WriteLine("Speech recognition rejected.");
+
+            Console.WriteLine("Stopping speech recognitions...");
+            recognizer.RecognizeAsyncStop();
+            await msRecognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);
+            Console.WriteLine("Speech recognition services stopped.");
         }
 
-        static void Recognizer_RecognizeCompleted(object sender, RecognizeCompletedEventArgs e)
+        private static void Recognizer_SpeechRecognized(object sender, System.Speech.Recognition.SpeechRecognizedEventArgs e)
         {
-            if (e.Error != null)
+            Console.WriteLine($"System.Speech recognized: {e.Result.Text}");
+            string command = e.Result.Text.ToLowerInvariant();
+
+            if (appCommands.ContainsKey(command))
             {
-                Console.WriteLine("Error in recognition: " + e.Error.Message);
+                Console.WriteLine($"Executing command: {command}");
+                synthesizer.SpeakAsync($"Opening {command.Split(' ')[1]}");
+                Process.Start(appCommands[command]);
             }
-            if (e.Cancelled)
+            else
             {
-                Console.WriteLine("Recognition cancelled.");
+                Console.WriteLine("Command not found in appCommands.");
             }
-            Console.WriteLine("Recognition completed.");
         }
 
-        static void Recognizer_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        private static async void MsRecognizer_Recognized(object sender, Microsoft.CognitiveServices.Speech.SpeechRecognitionEventArgs e)
         {
-            string spokenText = e.Result.Text;
-            Console.WriteLine("Recognized command: " + spokenText);
-
-            if (spokenText.StartsWith("Jarvis"))
+            if (e.Result.Reason == Microsoft.CognitiveServices.Speech.ResultReason.RecognizedSpeech)
             {
-                string recognizedText = e.Result.Text;
-                recognizedText = PostProcessText(recognizedText);
+                string command = e.Result.Text.ToLowerInvariant();
+                Console.WriteLine($"Cognitive Services recognized: {command}");
 
-                string command = spokenText.Substring("Jarvis".Length).TrimStart();
-                if (command.StartsWith("open notepad"))
+                if (command.StartsWith("search ") || command.StartsWith("search for ") || command.StartsWith("search up "))
                 {
-                    synthesizer.SpeakAsync("Opening Notepad");
-                    Process.Start("notepad.exe");
-                }
-                else if (command.StartsWith("open calculator"))
-                {
-                    synthesizer.SpeakAsync("Opening Calculator");
-                    Process.Start("calc.exe");
-                }
-                // Check for specific patterns
-                else if (command.StartsWith("search for"))
-                {
-                    HandleSearchCommand(recognizedText);
-                }
-                else if (command.StartsWith("search"))
-                {
-                    string searchQuery = command.Substring("search".Length).TrimStart();
+                    string searchQuery = RemoveCommandPrefix(command, new[] { "search ", "search for ", "search up " });
+                    Console.WriteLine($"Executing search for: {searchQuery}");
                     synthesizer.SpeakAsync($"Searching for {searchQuery}");
                     Process.Start("chrome.exe", $"http://www.google.com/search?q={Uri.EscapeDataString(searchQuery)}");
+
+                    // Wait for 3 seconds before processing the next command
+                    await Task.Delay(3000);
                 }
                 else
                 {
-                    synthesizer.SpeakAsync("Command not recognized");
+                    Console.WriteLine("Received speech does not match 'search' command patterns.");
                 }
             }
             else
             {
-                synthesizer.SpeakAsync("Wake word not recognized");
+                Console.WriteLine($"Speech recognition failed with reason: {e.Result.Reason}");
             }
         }
 
-        static void HandleSearchCommand(string command)
+
+        private static void InitializeAppCommands()
         {
-
-
-            string searchQuery = command.Substring("search for".Length).TrimStart();
-            searchQuery = PostProcessText(searchQuery); // Apply corrections here
-            //synthesizer.Speak($"Did you say: search for {searchQuery}?");
-            //Console.WriteLine("Press 'y' to confirm, 'n' to cancel.");
-
-            if (/*Console.ReadKey().Key == ConsoleKey.Y*/ true)//For now
+            appCommands = new Dictionary<string, string>
             {
-                synthesizer.SpeakAsync($"Searching for {searchQuery}");
-                Process.Start("chrome.exe", $"http://www.google.com/search?q={Uri.EscapeDataString(searchQuery)}");
-            }
-            else
-            {
-                synthesizer.SpeakAsync("Search cancelled.");
-            }
-        }
-        static string PostProcessText(string recognizedText)
-        {
-            // Dictionary of known misrecognitions and corrections
-            var corrections = new Dictionary<string, string>
-            {
-                { "You To", "YouTube" },
-                // Add more known corrections here
+                { "open notepad", "notepad.exe" },
+                { "open calculator", "calc.exe" }
+                // You can add more commands here
             };
+        }
 
-            foreach (var correction in corrections)
+        static string RemoveCommandPrefix(string command, string[] prefixes)
+        {
+            foreach (var prefix in prefixes)
             {
-                recognizedText = recognizedText.Replace(correction.Key, correction.Value);
+                if (command.StartsWith(prefix))
+                {
+                    return command.Substring(prefix.Length).TrimStart();
+                }
             }
-
-            return recognizedText;
+            return command;
         }
 
     }
