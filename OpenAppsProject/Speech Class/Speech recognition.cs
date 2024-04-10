@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.CognitiveServices.Speech;
 using System.Threading.Tasks;
 using System.Linq;
+using OpenAppsProject.Retriever_Class;
 
 namespace OpenAppsProject.Speech_Class
 {
@@ -14,6 +15,7 @@ namespace OpenAppsProject.Speech_Class
         private static Dictionary<string, string> appCommands;
         private static Microsoft.CognitiveServices.Speech.SpeechRecognizer msRecognizer;
         private static System.Speech.Recognition.SpeechRecognitionEngine recognizer;
+        private static bool commandProcessed = false; //Flag to indicate command processing
 
         public async Task run()
         {
@@ -55,11 +57,32 @@ namespace OpenAppsProject.Speech_Class
             Console.WriteLine($"System.Speech recognized: {e.Result.Text}");
             string command = e.Result.Text.ToLowerInvariant();
 
+            Console.WriteLine($"Processed command: {command}");  // Debugging line
+
+
+            
             if (appCommands.ContainsKey(command))
             {
+
+
                 Console.WriteLine($"Executing command: {command}");
+                if (command.StartsWith("show me") || command.StartsWith("list") || command.StartsWith("show"))
+                {
+
+                    if (command.Contains("steam games") || command.Contains(" steam library"))
+                    {
+                        Console.WriteLine("Steam command detected. Retrieving Steam games...");
+                        new SteamGamesRetriever().run();
+                        commandProcessed = true;
+                    }
+                    return;  //Dont need to Execute opening - This only displays it
+
+                }
+
                 synthesizer.SpeakAsync($"Opening {command.Split(' ')[1]}");
                 Process.Start(appCommands[command]);
+                commandProcessed = true;
+
             }
             else
             {
@@ -67,26 +90,33 @@ namespace OpenAppsProject.Speech_Class
             }
         }
 
-        private static async void MsRecognizer_Recognized(object sender, Microsoft.CognitiveServices.Speech.SpeechRecognitionEventArgs e)
+        private static void MsRecognizer_Recognized(object sender, Microsoft.CognitiveServices.Speech.SpeechRecognitionEventArgs e)
         {
+            return; // I really dont want to waste my free shit
+
+            if (commandProcessed)
+            {
+                Console.WriteLine("Command already processed by System.Speech. Ignoring Cognitive Services recognition.");
+                commandProcessed = false; // Reset the flag
+                return;
+            }
+
             if (e.Result.Reason == Microsoft.CognitiveServices.Speech.ResultReason.RecognizedSpeech)
             {
                 string command = e.Result.Text.ToLowerInvariant();
                 Console.WriteLine($"Cognitive Services recognized: {command}");
 
-                if (command.StartsWith("search ") || command.StartsWith("search for ") || command.StartsWith("search up "))
+                // Check if the command is a search command
+                if (command.StartsWith("search") || command.StartsWith("search for") || command.StartsWith("search up"))
                 {
-                    string searchQuery = RemoveCommandPrefix(command, new[] { "search ", "search for ", "search up " });
+                    string searchQuery = RemoveCommandPrefix(command, new[] { "search", "search for", "search up" });
                     Console.WriteLine($"Executing search for: {searchQuery}");
                     synthesizer.SpeakAsync($"Searching for {searchQuery}");
                     Process.Start("chrome.exe", $"http://www.google.com/search?q={Uri.EscapeDataString(searchQuery)}");
-
-                    // Wait for 3 seconds before processing the next command
-                    await Task.Delay(3000);
                 }
                 else
                 {
-                    Console.WriteLine("Received speech does not match 'search' command patterns.");
+                    Console.WriteLine("Command is not a search command.");
                 }
             }
             else
@@ -96,17 +126,26 @@ namespace OpenAppsProject.Speech_Class
         }
 
 
+
         private static void InitializeAppCommands()
         {
             appCommands = new Dictionary<string, string>
             {
                 { "open notepad", "notepad.exe" },
-                { "open calculator", "calc.exe" }
-                // You can add more commands here
+                { "open calculator", "calc.exe" },
+                { "open minecraft", @"C:\Users\gilla\AppData\Local\Programs\launcher\Lunar Client.exe" }
+                   
             };
+            //Special commands that don't directly map to an executable
+            appCommands.Add("show me steam games", null);
+            appCommands.Add("list steam games", null);
+            appCommands.Add("show steam games", null);
+            appCommands.Add("show me steam library", null);
+            appCommands.Add("list steam library", null);
+            appCommands.Add("show steam library", null);
         }
 
-        static string RemoveCommandPrefix(string command, string[] prefixes)
+        private static string RemoveCommandPrefix(string command, string[] prefixes)
         {
             foreach (var prefix in prefixes)
             {
