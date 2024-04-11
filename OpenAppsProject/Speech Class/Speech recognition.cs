@@ -19,7 +19,7 @@ namespace OpenAppsProject.Speech_Class
         private static bool commandProcessed = false; //Flag to indicate command processing
         private static bool commandProcessedSearch = false; //Flag to indicate command processing for search
 
-        private bool _muteInput = true;
+        private static bool _muteInput = false;
 
         public void muteSpeech(bool muteInput)
         {
@@ -30,8 +30,7 @@ namespace OpenAppsProject.Speech_Class
         }
         public async Task run()
         {
-            if (_muteInput)
-            {
+            
                 Console.WriteLine("Initializing synthesizer...");
                 synthesizer = new System.Speech.Synthesis.SpeechSynthesizer();
                 Console.WriteLine("Initializing application commands...");
@@ -70,7 +69,7 @@ namespace OpenAppsProject.Speech_Class
                 recognizer.RecognizeAsyncStop();
                 await msRecognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);
                 Console.WriteLine("Speech recognition services stopped.");
-            }
+            
         }
 
 

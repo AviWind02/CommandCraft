@@ -8,13 +8,15 @@ namespace OpenAppsProject.Speech_Class
 {
     internal class AppCommand
     {
+        public string Name { get; set; }
         public string ExecutablePath { get; set; }
-        public List<string> SupportedActions { get; set; }
+        public HashSet<string> Actions { get; set; }
 
-        public AppCommand(string executablePath, List<string> supportedActions)
+        public AppCommand(string name, string executablePath, HashSet<string> actions)
         {
+            Name = name;
             ExecutablePath = executablePath;
-            SupportedActions = supportedActions;
+            Actions = actions;
         }
     }
 }
