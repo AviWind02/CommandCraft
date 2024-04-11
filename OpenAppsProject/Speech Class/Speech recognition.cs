@@ -57,7 +57,7 @@ namespace OpenAppsProject.Speech_Class
                 recognizer.RecognizeAsync(System.Speech.Recognition.RecognizeMode.Multiple);
 
                 Console.WriteLine("Setting up Cognitive Services speech recognition...");
-                var config = SpeechConfig.FromSubscription("01eeed71b753442098af2ed03a8f2cef", "eastus");
+                var config = SpeechConfig.FromSubscription("API KEY", "eastus");
                 msRecognizer = new Microsoft.CognitiveServices.Speech.SpeechRecognizer(config);
                 msRecognizer.Recognized += MsRecognizer_Recognized;
 
