@@ -31,9 +31,9 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.buttonSaveLog = new System.Windows.Forms.Button();
-            this.buttonClearLog = new System.Windows.Forms.Button();
             this.buttonMute = new System.Windows.Forms.Button();
             this.buttonExit = new System.Windows.Forms.Button();
+            this.buttonClearLog = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,16 +65,6 @@
             this.buttonSaveLog.UseVisualStyleBackColor = true;
             this.buttonSaveLog.Click += new System.EventHandler(this.buttonSaveLog_Click);
             // 
-            // buttonClearLog
-            // 
-            this.buttonClearLog.BackColor = System.Drawing.Color.RosyBrown;
-            this.buttonClearLog.Location = new System.Drawing.Point(12, 415);
-            this.buttonClearLog.Name = "buttonClearLog";
-            this.buttonClearLog.Size = new System.Drawing.Size(75, 23);
-            this.buttonClearLog.TabIndex = 4;
-            this.buttonClearLog.Text = "Clear";
-            this.buttonClearLog.UseVisualStyleBackColor = false;
-            // 
             // buttonMute
             // 
             this.buttonMute.Location = new System.Drawing.Point(713, 415);
@@ -94,6 +84,18 @@
             this.buttonExit.TabIndex = 3;
             this.buttonExit.Text = "Kill App";
             this.buttonExit.UseVisualStyleBackColor = false;
+            this.buttonExit.Click += new System.EventHandler(this.buttonExit_Click);
+            // 
+            // buttonClearLog
+            // 
+            this.buttonClearLog.BackColor = System.Drawing.Color.RosyBrown;
+            this.buttonClearLog.Location = new System.Drawing.Point(12, 415);
+            this.buttonClearLog.Name = "buttonClearLog";
+            this.buttonClearLog.Size = new System.Drawing.Size(75, 23);
+            this.buttonClearLog.TabIndex = 4;
+            this.buttonClearLog.Text = "Clear";
+            this.buttonClearLog.UseVisualStyleBackColor = false;
+            this.buttonClearLog.Click += new System.EventHandler(this.buttonClearLog_Click);
             // 
             // UserForm
             // 
@@ -115,9 +117,9 @@
         #endregion
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button buttonSaveLog;
-        private System.Windows.Forms.Button buttonClearLog;
         private System.Windows.Forms.RichTextBox richTextBoxLog;
         private System.Windows.Forms.Button buttonMute;
         private System.Windows.Forms.Button buttonExit;
+        private System.Windows.Forms.Button buttonClearLog;
     }
 }

@@ -58,6 +58,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Retriever Class\SteamGamesRetriever.cs" />
+    <Compile Include="Speech Class\APIKey.cs" />
+    <Compile Include="Speech Class\AppCommand.cs" />
     <Compile Include="Speech Class\Speech recognition.cs" />
     <Compile Include="Misc Class\ShowDesktop.cs" />
     <Compile Include="Windows\UserForm.cs">

@@ -55,10 +55,22 @@ namespace OpenAppsProject.Windows
 
             // Update button background color based on mute state
             buttonMute.BackColor = muteInput ? Color.Orange : Color.White;
+            buttonMute.Text = muteInput ? "Unmute" : "Mute";
 
             // Assuming you have an existing instance of Speech_recognition
             // Update its mute state
             speechRecognition.muteSpeech(muteInput);  // Make sure you have such a method in Speech_recognition
+        }
+
+        private void buttonExit_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+            Environment.Exit(1);
+        }
+
+        private void buttonClearLog_Click(object sender, EventArgs e)
+        {
+            richTextBoxLog.Clear();
         }
     }
 }

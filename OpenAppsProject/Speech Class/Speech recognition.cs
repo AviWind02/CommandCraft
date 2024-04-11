@@ -76,7 +76,9 @@ namespace OpenAppsProject.Speech_Class
 
         private static void Recognizer_SpeechRecognized(object sender, System.Speech.Recognition.SpeechRecognizedEventArgs e)
         {
-            Console.WriteLine($"System.Speech recognized: {e.Result.Text}");
+            if (_muteInput)
+                    return;
+                Console.WriteLine($"System.Speech recognized: {e.Result.Text}");
             string command = e.Result.Text.ToLowerInvariant();
 
             Console.WriteLine($"Processed command: {command}");  // Debugging line
