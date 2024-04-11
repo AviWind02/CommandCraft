@@ -12,8 +12,12 @@ namespace OpenAppsProject.Speech_Class
     internal class Speech_recognition
     {
 
+        private Executables_Class executablesclass;
+
         private static System.Speech.Synthesis.SpeechSynthesizer synthesizer;
         private static Dictionary<string, string> appCommands;
+        private static List<string> grammarPhrases = new List<string>();
+
         private static Microsoft.CognitiveServices.Speech.SpeechRecognizer msRecognizer;
         private static System.Speech.Recognition.SpeechRecognitionEngine recognizer;
         private static bool commandProcessed = false; //Flag to indicate command processing
@@ -30,6 +34,7 @@ namespace OpenAppsProject.Speech_Class
         }
         public async Task run()
         {
+
             
                 Console.WriteLine("Initializing synthesizer...");
                 synthesizer = new System.Speech.Synthesis.SpeechSynthesizer();
@@ -43,7 +48,31 @@ namespace OpenAppsProject.Speech_Class
 
                 try
                 {
-                    var grammar = new System.Speech.Recognition.Grammar(new System.Speech.Recognition.GrammarBuilder(new System.Speech.Recognition.Choices(appCommands.Keys.ToArray())));
+                    executablesclass = new Executables_Class();
+
+                    foreach (var appCommand in appCommands)
+                    {
+                        if (!string.IsNullOrEmpty(appCommand.Value))
+                        {
+                            foreach (var executable in executablesclass.executables)
+                            {
+                                grammarPhrases.Add($"{executable} {appCommand.Key}");
+                                Console.WriteLine($"Added Executable: {executable} to App command: {appCommand} = {executable} {appCommand.Key}");
+                            }
+
+                        }
+                        else
+                        {
+                            // Skip the special command
+                            Console.WriteLine($"Added special command: {appCommand.Key}");
+                            grammarPhrases.Add(appCommand.Key);
+                        }
+
+                    }
+                
+
+
+                    var grammar = new System.Speech.Recognition.Grammar(new System.Speech.Recognition.GrammarBuilder(new System.Speech.Recognition.Choices(grammarPhrases.ToArray())));
                     recognizer.LoadGrammar(grammar);
                     Console.WriteLine("Grammar loaded successfully.");
                 }
@@ -80,9 +109,9 @@ namespace OpenAppsProject.Speech_Class
                 Console.WriteLine($"System.Speech recognized: {e.Result.Text}");
             string command = e.Result.Text.ToLowerInvariant();
 
-            Console.WriteLine($"Processed command: {command}");  // Debugging line
+            Console.WriteLine($"Processing command: {command}");  
 
-            if (appCommands.ContainsKey(command))
+            if (appCommands.ContainsKey(command) || grammarPhrases.Contains(command))
             {
                 Console.WriteLine($"Command found in appCommands: {command}");
 
@@ -108,8 +137,26 @@ namespace OpenAppsProject.Speech_Class
                 }
                 else
                 {
-                    synthesizer.SpeakAsync($"Opening {command.Split(' ')[1]}");
-                    Process.Start(appCommands[command]);
+                    var commandParts = command.Split(' ');
+                    if (commandParts.Length >= 2)
+                    {
+                        string action = commandParts[0]; //e.g., "open"
+                        string appName = commandParts[1]; //e.g., "notepad"
+
+                        if (appCommands.TryGetValue(appName, out var executablePath))
+                        {
+                            Executables_Class.ExecuteApplicationAction(action, appName, executablePath);
+                            Console.WriteLine($"Executed {action} on {appName}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{appName} not found in appCommands.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Incomplete command.");
+                    }
                     commandProcessed = true;
                 }
             }
@@ -157,14 +204,14 @@ namespace OpenAppsProject.Speech_Class
         {
             appCommands = new Dictionary<string, string>
             {
-                { "open notepad", "notepad.exe" },
-                { "open calculator", "calc.exe" },
-                { "open minecraft", @"C:\Users\gilla\AppData\Local\Programs\launcher\Lunar Client.exe" },
-                { "open chrome", @"C:\Program Files\Google\Chrome\Application\chrome.exe" },
-                { "open visual studio 22", @"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" }, 
-                { "open steam", @"C:\Program Files (x86)\Steam\steam.exe" },
-                { "open spotify", @"C:\Users\gilla\AppData\Roaming\Spotify\Spotify.exe" },
-                { "open file explorer", "explorer" }
+                { "notepad", "notepad.exe" },
+                { "calculator", "calc.exe" },
+                { "minecraft", @"C:\Users\gilla\AppData\Local\Programs\launcher\Lunar Client.exe" },
+                { "chrome", @"C:\Program Files\Google\Chrome\Application\chrome.exe" },
+                { "visual studio 22", @"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" }, 
+                { "steam", @"C:\Program Files (x86)\Steam\steam.exe" },
+                { "spotify", @"C:\Users\gilla\AppData\Roaming\Spotify\Spotify.exe" },
+                { "file explorer", "explorer" }
             };
 
             // Special commands that don't directly map to an executable

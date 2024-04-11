@@ -60,6 +60,7 @@
     <Compile Include="Retriever Class\SteamGamesRetriever.cs" />
     <Compile Include="Speech Class\APIKey.cs" />
     <Compile Include="Speech Class\AppCommand.cs" />
+    <Compile Include="Speech Class\Executables.cs" />
     <Compile Include="Speech Class\Speech recognition.cs" />
     <Compile Include="Misc Class\ShowDesktop.cs" />
     <Compile Include="Windows\UserForm.cs">

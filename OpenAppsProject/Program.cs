@@ -16,13 +16,13 @@ namespace OpenAppsProject
         static async Task Main(string[] args)
         {
            var speechTask = new Speech_recognition().run(); // Start the speech recognition task
-            //steamGamesRetriever = new SteamGamesRetriever();// Trying to get all steam games from all steams lib(Drives) on the computer
-            //steamGamesRetriever.run();
+            steamGamesRetriever = new SteamGamesRetriever();// Trying to get all steam games from all steams lib(Drives) on the computer
+            steamGamesRetriever.run();
 
-            //Application.EnableVisualStyles();
-            //Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new UserForm());
- 
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new UserForm());
+
 
             await speechTask; // wait for the speech task to complete after the form is closed
         }
